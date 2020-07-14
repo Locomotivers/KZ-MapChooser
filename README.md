@@ -17,5 +17,8 @@ It requires a database table in the "kztimer" database with entries for all maps
 ```
  CREATE TABLE IF NOT EXISTS `kz_maps` (mapname VARCHAR(50) NOT NULL PRIMARY KEY, `tier` INT(2) NOT NULL);
  ```
+ You can use maplist.sql to import all global maps into your database.
+ 
 * Fill it with all the maps you are tracking.
 * Ensure you have all the maps you want in `mapcycle.txt` on your server.
+* Open nominations.cfg and specify what map tiers you are hosting.
