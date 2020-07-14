@@ -14,7 +14,7 @@ It requires a database table in the "kztimer" database with entries for all maps
 * Ensure you have the "kztimer" database configured in database.cfg
 * Create a table "kz_maps" in the "kztimer" database:
 ```
- > `CREATE TABLE IF NOT EXISTS `kz_maps` (mapname VARCHAR(50) NOT NULL PRIMARY KEY, `tier` INT(2) NOT NULL);`
+ CREATE TABLE IF NOT EXISTS `kz_maps` (mapname VARCHAR(50) NOT NULL PRIMARY KEY, `tier` INT(2) NOT NULL);
  ```
 * Fill it with all the maps you are tracking.
 * Ensure you have all the maps you want in `mapcycle.txt` on your server.
