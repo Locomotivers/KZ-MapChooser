@@ -7,6 +7,7 @@ It requires a database table in the "kztimer" database with entries for all maps
 
 * Sourcemod 1.10
 * MySQL Database Server
+* KZTimer installed and set up correctly.
 
 ## Installation
 
