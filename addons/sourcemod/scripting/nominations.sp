@@ -465,7 +465,7 @@ public int Handler_MapSelectMenu(Menu menu, MenuAction action, int param1, int p
 public void db_setupDatabase()
 {
 	char szError[255];
-	g_hDb = SQL_Connect("kztimer", false, szError, 255);
+	g_hDb = SQL_Connect("kzMaps", false, szError, 255);
 
 	if (g_hDb == null)
 		SetFailState("[Nominations] Unable to connect to database (%s)", szError);
@@ -481,11 +481,11 @@ public void SelectMapList()
 	ExplodeString(szTier, ".", szBuffer, 2, 32);
 
 	if (StrEqual(szBuffer[1], "0"))
-		Format(szQuery, sizeof(szQuery), "select kz_maps.mapname, kz_maps.tier from kz_maps where kz_maps.tier = %s group by mapname;", szBuffer[0]);
+		Format(szQuery, sizeof(szQuery), "select kz_maps.mapname, kz_maps.tier, kz_maps.ljroom from kz_maps where kz_maps.tier = %s group by mapname;", szBuffer[0]);
 	else if (strlen(szBuffer[1]) > 0)
-		Format(szQuery, sizeof(szQuery), "select kz_maps.mapname, kz_maps.tier from kz_maps WHERE kz_maps.tier >= %s AND kz_maps.tier <= %s group by mapname;", szBuffer[0], szBuffer[1]);
+		Format(szQuery, sizeof(szQuery), "select kz_maps.mapname, kz_maps.tier, kz_maps.ljroom from kz_maps WHERE kz_maps.tier >= %s AND kz_maps.tier <= %s group by mapname;", szBuffer[0], szBuffer[1]);
 	else
-		Format(szQuery, sizeof(szQuery), "select kz_maps.mapname, kz_maps.tier from kz_maps group by mapname;");
+		Format(szQuery, sizeof(szQuery), "select kz_maps.mapname, kz_maps.tier, kz_maps.ljroom from kz_maps group by mapname;");
 
 	SQL_TQuery(g_hDb, SelectMapListCallback, szQuery, DBPrio_Low);
 }
@@ -504,12 +504,17 @@ public void SelectMapListCallback(Handle owner, Handle hndl, const char[] error,
 		g_MapListTier.Clear();
 
 		char szValue[512], szMapName[128];
+		int ljroom = 0;
 		while (SQL_FetchRow(hndl))
 		{
 			SQL_FetchString(hndl, 0, szMapName, sizeof(szMapName));
 			tier = SQL_FetchInt(hndl, 1);
-			
-			Format(szValue, sizeof(szValue), "%s | Tier %d", szMapName, tier);
+			ljroom = SQL_FetchInt(hndl, 2);
+			if (ljroom == 1)
+				Format(szValue, sizeof(szValue), "%s - Tier %d | LJ Room", szMapName, tier);
+			else
+				Format(szValue, sizeof(szValue), "%s - Tier %d", szMapName, tier);
+
 			if (FindStringInArray(g_MapListWhiteList, szMapName) > -1){
 				g_MapList.PushString(szMapName);
 				g_MapListTier.PushString(szValue);
