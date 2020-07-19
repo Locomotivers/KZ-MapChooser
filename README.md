@@ -1,19 +1,19 @@
-# SourceMod MapChooser for KZTimer
+# SourceMod MapChooser for KZ Servers
 
-This is a modified version of the original MapChooser intended for KZTimer with support for dynamic map lists and tier display.
-It requires a database table in the "kztimer" database with entries for all maps you want to track, along with it's tier information.
+This is a modified version of the original MapChooser intended for KZ Servers with support for dynamic map lists and tier display.
+It requires a database table in a database with entries for all maps you want to track, along with it's tier information. For convenience, create the table in the "kztimer" or "gokz" databases!
 
 ## Requirements
 
 * Sourcemod 1.10
 * MySQL Database Server
-* KZTimer installed and set up correctly.
+* KZTimer/GOKZ installed and set up correctly.
 
 ## Installation
 
 * Upload all the files to your csgo server directory
-* Ensure you have the "kztimer" database configured in database.cfg
-* Create a table "kz_maps" in the "kztimer" database:
+* Ensure you have the "kztimer" or "gokz" databases configured in database.cfg
+* Create a table "kz_maps" in your database:
 ```
  CREATE TABLE IF NOT EXISTS `kz_maps` (mapname VARCHAR(50) NOT NULL PRIMARY KEY, `tier` INT(2) NOT NULL);
  ```
