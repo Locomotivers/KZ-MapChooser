@@ -47,7 +47,7 @@ public Plugin:myinfo =
 	name = "KZ Rock The Vote",
 	author = "Powerlord,AlliedModders LLC & Infra",
 	description = "Provides RTV Map Voting for KZ Servers.",
-	version = "2.0.0",
+	version = "2.0.1",
 	url = "https://github.com/1zc/KZ-MapChooser"
 };
 
@@ -89,7 +89,7 @@ public OnPluginStart()
 	RegAdminCmd("mce_forcertv", Command_ForceRTV, ADMFLAG_CHANGEMAP, "Force an RTV vote");
 	
 	// Rock The Vote Extended cvars
-	CreateConVar("rtve_version", MCE_VERSION, "Rock The Vote Extended Version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+	CreateConVar("rtve_version", MCE_VERSION, "Rock The Vote Extended Version", FCVAR_SPONLY|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	
 	AutoExecConfig(true, "KZ_RTV");
 }
@@ -218,25 +218,25 @@ AttemptRTV(client)
 {
 	if (!g_RTVAllowed  || (GetConVarInt(g_Cvar_RTVPostVoteAction) == 1 && HasEndOfMapVoteFinished()))
 	{
-		CReplyToCommand(client, "[SM] %t", "RTV Not Allowed");
+		CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "RTV Not Allowed");
 		return;
 	}
 		
 	if (!CanMapChooserStartVote())
 	{
-		CReplyToCommand(client, "[SM] %t", "RTV Started");
+		CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "RTV Started");
 		return;
 	}
 	
 	if (GetClientCount(true) < GetConVarInt(g_Cvar_MinPlayers))
 	{
-		CReplyToCommand(client, "[SM] %t", "Minimal Players Not Met");
+		CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "Minimal Players Not Met");
 		return;			
 	}
 	
 	if (g_Voted[client])
 	{
-		CReplyToCommand(client, "[SM] %t", "Already Voted", g_Votes, g_VotesNeeded);
+		CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "Already Voted", g_Votes, g_VotesNeeded);
 		return;
 	}	
 	
@@ -246,7 +246,7 @@ AttemptRTV(client)
 	g_Votes++;
 	g_Voted[client] = true;
 	
-	CPrintToChatAll("[SM] %t", "RTV Requested", name, g_Votes, g_VotesNeeded);
+	CPrintToChatAll("[\x0CKZ-MC\x01] %t", "RTV Requested", name, g_Votes, g_VotesNeeded);
 	
 	if (g_Votes >= g_VotesNeeded)
 	{
@@ -272,7 +272,7 @@ StartRTV()
 		new String:map[PLATFORM_MAX_PATH];
 		if (GetNextMap(map, sizeof(map)))
 		{
-			CPrintToChatAll("[SM] %t", "Changing Maps", map);
+			CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Changing Maps", map);
 			CreateTimer(5.0, Timer_ChangeMap, _, TIMER_FLAG_NO_MAPCHANGE);
 			g_InChange = true;
 			

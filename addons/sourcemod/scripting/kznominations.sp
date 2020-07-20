@@ -45,7 +45,7 @@ public Plugin:myinfo =
 	name = "KZ Map Nominations",
 	author = "Powerlord, AlliedModders LLC & Infra",
 	description = "Provides Map Nominations for KZ Servers.",
-	version = "2.0.0",
+	version = "2.0.1",
 	url = "https://github.com/1zc/KZ-MapChooser"
 };
 
@@ -105,7 +105,7 @@ public OnPluginStart()
 	RegAdminCmd("sm_nominate_addmap", Command_Addmap, ADMFLAG_CHANGEMAP, "sm_nominate_addmap <mapname> - Forces a map to be on the next mapvote.");
 	
 	// Nominations Extended cvars
-	CreateConVar("ne_version", MCE_VERSION, "Nominations Extended Version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+	CreateConVar("ne_version", MCE_VERSION, "Nominations Extended Version", FCVAR_SPONLY|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	g_mapTrie = CreateTrie();
 
 	AutoExecConfig(true, "KZ_Nominations");
@@ -132,7 +132,7 @@ public OnConfigsExecuted()
 	}
 	
 	SelectMapList();
-	BuildMapMenu();
+	//BuildMapMenu();
 }
 
 public OnNominationRemoved(const String:map[], owner)
@@ -161,7 +161,7 @@ public Action:Command_Addmap(client, args)
 {
 	if (args < 1)
 	{
-		CReplyToCommand(client, "[NE] Usage: sm_nominate_addmap <mapname>");
+		CReplyToCommand(client, "[\x0CKZ-MC\x01] Usage: sm_nominate_addmap <mapname>");
 		return Plugin_Handled;
 	}
 	
@@ -180,29 +180,29 @@ public Action:Command_Addmap(client, args)
 	GetMapDisplayName(resolvedMap, displayName, sizeof(displayName));
 
 	new status;
-	if (!GetTrieValue(g_mapTrie, resolvedMap, status))
+	if (!GetTrieValue(g_mapTrie, mapname, status))
 	{
-		CReplyToCommand(client, "%t", "Map was not found", mapname);
+		CReplyToCommand(client, "%t", "Map was not found", displayName);
 		return Plugin_Handled;		
 	}
 
 	RemoveMapPath(resolvedMap, resolvedMap, sizeof(resolvedMap));
 	
-	new NominateResult:result = NominateMap(resolvedMap, true, 0);
+	new NominateResult:result = NominateMap(mapname, true, 0);
 	
 	if (result > Nominate_Replaced)
 	{
 		/* We assume already in vote is the casue because the maplist does a Map Validity check and we forced, so it can't be full */
-		CReplyToCommand(client, "%t", "Map Already In Vote", mapname);
+		CReplyToCommand(client, "%t", "Map Already In Vote", displayName);
 		
 		return Plugin_Handled;	
 	}
 	
 	
-	SetTrieValue(g_mapTrie, resolvedMap, MAPSTATUS_DISABLED|MAPSTATUS_EXCLUDE_NOMINATED);
+	SetTrieValue(g_mapTrie, mapname, MAPSTATUS_DISABLED|MAPSTATUS_EXCLUDE_NOMINATED);
 
 	
-	CReplyToCommand(client, "%t", "Map Inserted", mapname);
+	CReplyToCommand(client, "%t", "Map Inserted", displayName);
 	LogAction(client, -1, "\"%L\" inserted map \"%s\".", client, mapname);
 
 	return Plugin_Handled;		
@@ -258,7 +258,17 @@ public Action:Command_Nominate(client, args)
 	
 	decl String:mapname[PLATFORM_MAX_PATH];
 	GetCmdArg(1, mapname, sizeof(mapname));
+
+	//if (FindMap(mapname, mapname, sizeof(mapname)) == FindMap_NotFound)
+	//{
+		// We couldn't resolve the map entry to a filename, so...
+		//ReplyToCommand(client, "%t", "Map was not found", mapname);
+		//return Plugin_Handled;		
+	//}
 	
+	char displayName[PLATFORM_MAX_PATH];
+	GetMapDisplayName(mapname, displayName, sizeof(displayName));
+
 	new status;
 	if (!GetTrieValue(g_mapTrie, mapname, status))
 	{
@@ -270,33 +280,33 @@ public Action:Command_Nominate(client, args)
 	{
 		if ((status & MAPSTATUS_EXCLUDE_CURRENT) == MAPSTATUS_EXCLUDE_CURRENT)
 		{
-			CReplyToCommand(client, "[NE] %t", "Can't Nominate Current Map");
+			CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "Can't Nominate Current Map");
 		}
 		
 		if ((status & MAPSTATUS_EXCLUDE_PREVIOUS) == MAPSTATUS_EXCLUDE_PREVIOUS)
 		{
-			CReplyToCommand(client, "[NE] %t", "Map in Exclude List");
+			CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "Map in Exclude List");
 		}
 		
 		if ((status & MAPSTATUS_EXCLUDE_NOMINATED) == MAPSTATUS_EXCLUDE_NOMINATED)
 		{
-			CReplyToCommand(client, "[NE] %t", "Map Already Nominated");
+			CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "Map Already Nominated");
 		}
 		
 		return Plugin_Handled;
 	}
-	
+	RemoveMapPath(mapname, mapname, sizeof(mapname));
 	new NominateResult:result = NominateMap(mapname, false, client);
 	
 	if (result > Nominate_Replaced)
 	{
 		if (result == Nominate_AlreadyInVote)
 		{
-			CReplyToCommand(client, "%t", "Map Already In Vote", mapname);
+			CReplyToCommand(client, "%t", "Map Already In Vote", displayName);
 		}
 		else
 		{
-			CReplyToCommand(client, "[NE] %t", "Map Already Nominated");
+			CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "Map Already Nominated");
 		}
 		
 		return Plugin_Handled;	
@@ -308,7 +318,7 @@ public Action:Command_Nominate(client, args)
 	
 	decl String:name[MAX_NAME_LENGTH];
 	GetClientName(client, name, sizeof(name));
-	PrintToChatAll("[NE] %t", "Map Nominated", name, mapname);
+	PrintToChatAll("[\x0CKZ-MC\x01] %t", "Map Nominated", name, displayName);
 	LogMessage("%s nominated %s", name, mapname);
 
 	return Plugin_Continue;
@@ -324,11 +334,8 @@ AttemptNominate(client)
 
 BuildMapMenu()
 {
-	if (g_MapMenu != INVALID_HANDLE)
-	{
-		CloseHandle(g_MapMenu);
-		g_MapMenu = INVALID_HANDLE;
-	}
+	CloseHandle(g_MapMenu);
+	g_MapMenu = INVALID_HANDLE;
 	
 	ClearTrie(g_mapTrie);
 	
@@ -337,7 +344,7 @@ BuildMapMenu()
 	decl String:map[PLATFORM_MAX_PATH];
 	
 	new Handle:excludeMaps = INVALID_HANDLE;
-	decl String:currentMap[32];
+	decl String:currentMap[PLATFORM_MAX_PATH];
 	
 	if (GetConVarBool(g_Cvar_ExcludeOld))
 	{	
@@ -354,8 +361,12 @@ BuildMapMenu()
 	for (new i = 0; i < GetArraySize(g_MapList); i++)
 	{
 		new status = MAPSTATUS_ENABLED;
-		
-		GetArrayString(g_MapListTier, i, map, sizeof(map));
+		g_MapList.GetString(i, map, sizeof(map));
+		FindMap(map, map, sizeof(map));
+		char displayName[PLATFORM_MAX_PATH];
+		GetArrayString(g_MapListTier, i, displayName, sizeof(displayName));
+		// GetMapDisplayName(map, displayName, sizeof(displayName));
+		//GetArrayString(g_MapListTier, i, map, sizeof(map));
 		//GetArrayString(g_MapList, i, map, sizeof(map));
 		
 		if (GetConVarBool(g_Cvar_ExcludeCurrent))
@@ -375,7 +386,7 @@ BuildMapMenu()
 			}
 		}
 		
-		AddMenuItem(g_MapMenu, map, map);
+		AddMenuItem(g_MapMenu, map, displayName);
 		SetTrieValue(g_mapTrie, map, status);
 	}
 	
@@ -393,8 +404,9 @@ public Handler_MapSelectMenu(Handle:menu, MenuAction:action, param1, param2)
 	{
 		case MenuAction_Select:
 		{
-			decl String:map[PLATFORM_MAX_PATH], String:name[MAX_NAME_LENGTH];
-			GetMenuItem(menu, param2, map, sizeof(map));		
+			decl String:map[PLATFORM_MAX_PATH], String:name[MAX_NAME_LENGTH]; 
+			char displayName[PLATFORM_MAX_PATH];
+			GetMenuItem(menu, param2, map, sizeof(map), _, displayName, sizeof(displayName));		
 			
 			GetClientName(param1, name, MAX_NAME_LENGTH);
 	
@@ -403,12 +415,12 @@ public Handler_MapSelectMenu(Handle:menu, MenuAction:action, param1, param2)
 			/* Don't need to check for InvalidMap because the menu did that already */
 			if (result == Nominate_AlreadyInVote)
 			{
-				PrintToChat(param1, "[NE] %t", "Map Already Nominated");
+				PrintToChat(param1, "[\x0CKZ-MC\x01] %t", "Map Already Nominated");
 				return 0;
 			}
 			else if (result == Nominate_VoteFull)
 			{
-				PrintToChat(param1, "[NE] %t", "Max Nominations");
+				PrintToChat(param1, "[\x0CKZ-MC\x01] %t", "Max Nominations");
 				return 0;
 			}
 			
@@ -416,11 +428,11 @@ public Handler_MapSelectMenu(Handle:menu, MenuAction:action, param1, param2)
 
 			if (result == Nominate_Replaced)
 			{
-				PrintToChatAll("[NE] %t", "Map Nomination Changed", name, map);
+				PrintToChatAll("[\x0CKZ-MC\x01] %t", "Map Nomination Changed", name, displayName);
 				return 0;	
 			}
 			
-			PrintToChatAll("[NE] %t", "Map Nominated", name, map);
+			PrintToChatAll("[\x0CKZ-MC\x01] %t", "Map Nominated", name, displayName);
 			LogMessage("%s nominated %s", name, map);
 		}
 		
@@ -449,7 +461,9 @@ public Handler_MapSelectMenu(Handle:menu, MenuAction:action, param1, param2)
 		case MenuAction_DisplayItem:
 		{
 			decl String:map[PLATFORM_MAX_PATH];
-			GetMenuItem(menu, param2, map, sizeof(map));
+			char displayName[PLATFORM_MAX_PATH];
+			//GetMenuItem(menu, param2, map, sizeof(map));
+			GetMenuItem(menu, param2, map, sizeof(map), _, displayName, sizeof(displayName));
 			
 			new mark = GetConVarInt(g_Cvar_MarkCustomMaps);
 			new bool:official;
@@ -463,7 +477,7 @@ public Handler_MapSelectMenu(Handle:menu, MenuAction:action, param1, param2)
 			}
 			
 			decl String:buffer[100];
-			decl String:display[150];
+			char display[PLATFORM_MAX_PATH + 64];
 			
 			if (mark)
 			{
@@ -487,7 +501,7 @@ public Handler_MapSelectMenu(Handle:menu, MenuAction:action, param1, param2)
 			}
 			else
 			{
-				strcopy(buffer, sizeof(buffer), map);
+				strcopy(buffer, sizeof(buffer), displayName);
 			}
 			
 			if ((status & MAPSTATUS_DISABLED) == MAPSTATUS_DISABLED)
@@ -600,7 +614,7 @@ stock bool:IsNominateAllowed(client)
 		{
 			new String:map[PLATFORM_MAX_PATH];
 			GetNextMap(map, sizeof(map));
-			CReplyToCommand(client, "[NE] %t", "Next Map", map);
+			CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "Next Map", map);
 			return false;
 		}
 		

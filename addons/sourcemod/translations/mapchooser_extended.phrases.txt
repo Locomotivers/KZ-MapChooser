@@ -7,19 +7,19 @@
 
 	"Nextmap Voting Started"
 	{
-		"en"			"Voting for next map has started."
+		"en"			"Voting for next map has begun! If you would like to revote, use !revote."
 	}	
 
 	"Nextmap Voting Finished"
 	{
 		"#format"			"{1:s},{2:i},{3:i}"
-		"en"			"Map voting has finished. The next map will be {1}. (Received {2}%% of {3} votes)"
+		"en"			"Map voting has completed. The next map will be {1}. (Received {2}%% of {3} votes)"
 	}
 
 	"Current Map Extended"
 	{
 		"#format"			"{1:i},{2:i}"
-		"en"			"The current map has been extended. (Received {1}%% of {2} votes)"
+		"en"			"Map voting has completed. The current map has been extended. (Received {1}%% of {2} votes)"
 	}
 	
 	"Extend Map"
@@ -80,18 +80,18 @@
 
 	"Line One"
 	{
-		"en"		"Consider which map you want to play..."
+		"en"		"Vote for the map you want to play next!"
 	}
 
 	"Line Two"
 	{
-		"en"		"...and don't hit buttons thoughtlessly ;-)"
+		"en"		"You can change your vote using !revote."
 	}
 
 	"Cannot Start Vote"
 	{
 		"#format"	"{1:i}"
-		"en"		"Vote already in progress.  Retrying in {1}s."
+		"en"		"A vote is already in progress.  Retrying in {1}s."
 	}
 
 	"Tie Vote"

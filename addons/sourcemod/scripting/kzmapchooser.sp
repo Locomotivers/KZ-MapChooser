@@ -86,7 +86,7 @@ public Plugin:myinfo =
 	name = "KZ MapChooser",
 	author = "Powerlord, Zuko, AlliedModders LLC & Infra",
 	description = "Automated Map Voting for KZ Servers.",
-	version = "2.0.0",
+	version = "2.0.1",
 	url = "https://github.com/1zc/KZ-MapChooser"
 };
 
@@ -260,7 +260,7 @@ public OnPluginStart()
 	g_Cvar_VoteDuration = CreateConVar("mce_voteduration", "20", "Specifies how long the mapvote should be available for.", _, true, 5.0);
 
 	// MapChooser Extended cvars
-	CreateConVar("mce_version", MCE_VERSION, "MapChooser Extended Version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_NOTIFY|FCVAR_DONTRECORD);
+	CreateConVar("mce_version", MCE_VERSION, "MapChooser Extended Version", FCVAR_SPONLY|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 
 	g_Cvar_RunOff = CreateConVar("mce_runoff", "1", "Hold run off votes if winning choice has less than a certain percentage of votes", _, true, 0.0, true, 1.0);
 	g_Cvar_RunOffPercent = CreateConVar("mce_runoffpercent", "50", "If winning choice has less than this percent of votes, hold a runoff", _, true, 0.0, true, 100.0);
@@ -564,7 +564,7 @@ public Action:Command_SetNextmap(client, args)
 {
 	if (args < 1)
 	{
-		CReplyToCommand(client, "[MCE] Usage: sm_setnextmap <map>");
+		CReplyToCommand(client, "[\x0CKZ-MC\x01] Usage: sm_setnextmap <map>");
 		return Plugin_Handled;
 	}
 
@@ -573,7 +573,7 @@ public Action:Command_SetNextmap(client, args)
 
 	if (!IsMapValid(map))
 	{
-		CReplyToCommand(client, "[MCE] %t", "Map was not found", map);
+		CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "Map was not found", map);
 		return Plugin_Handled;
 	}
 
@@ -966,7 +966,7 @@ public Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 
 public Action:Command_Mapvote(client, args)
 {
-	ShowActivity2(client, "[MCE] ", "%t", "Initiated Vote Map");
+	ShowActivity2(client, "[\x0CKZ-MC\x01] ", "%t", "Initiated Vote Map");
 
 	SetupWarningTimer(WarningType_Vote, MapChange_MapEnd, INVALID_HANDLE, true);
 
@@ -994,7 +994,7 @@ InitiateVote(MapChange:when, Handle:inputlist=INVALID_HANDLE)
 		// Can't start a vote, try again in 5 seconds.
 		//g_RetryTimer = CreateTimer(5.0, Timer_StartMapVote, _, TIMER_FLAG_NO_MAPCHANGE);
 		
-		CPrintToChatAll("[MCE] %t", "Cannot Start Vote", FAILURE_TIMER_LENGTH);
+		CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Cannot Start Vote", FAILURE_TIMER_LENGTH);
 		new Handle:data;
 		g_RetryTimer = CreateDataTimer(1.0, Timer_StartMapVote, data, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 		
@@ -1302,7 +1302,7 @@ InitiateVote(MapChange:when, Handle:inputlist=INVALID_HANDLE)
 	Call_Finish();
 
 	LogAction(-1, -1, "Voting for next map has started.");
-	CPrintToChatAll("[MCE] %t", "Nextmap Voting Started");
+	CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Nextmap Voting Started");
 }
 
 public Handler_NativeVoteFinished(Handle:vote,
@@ -1381,7 +1381,7 @@ public Handler_VoteFinishedGeneric(Handle:menu,
 			NativeVotes_DisplayPassEx(menu, NativeVotesPass_Extend);
 		}
 		
-		CPrintToChatAll("[MCE] %t", "Current Map Extended", RoundToFloor(float(item_info[0][VOTEINFO_ITEM_VOTES])/float(num_votes)*100), num_votes);
+		CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Current Map Extended", RoundToFloor(float(item_info[0][VOTEINFO_ITEM_VOTES])/float(num_votes)*100), num_votes);
 		LogAction(-1, -1, "Voting for next map has finished. The current map has been extended.");
 		
 		// We extended, so we'll have to vote again.
@@ -1397,7 +1397,7 @@ public Handler_VoteFinishedGeneric(Handle:menu,
 			NativeVotes_DisplayPassEx(menu, NativeVotesPass_Extend);
 		}
 		
-		CPrintToChatAll("[MCE] %t", "Current Map Stays", RoundToFloor(float(item_info[0][VOTEINFO_ITEM_VOTES])/float(num_votes)*100), num_votes);
+		CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Current Map Stays", RoundToFloor(float(item_info[0][VOTEINFO_ITEM_VOTES])/float(num_votes)*100), num_votes);
 		LogAction(-1, -1, "Voting for next map has finished. 'No Change' was the winner");
 		
 		g_HasVoteStarted = false;
@@ -1439,7 +1439,7 @@ public Handler_VoteFinishedGeneric(Handle:menu,
 		g_HasVoteStarted = false;
 		g_MapVoteCompleted = true;
 		
-		CPrintToChatAll("[MCE] %t", "Nextmap Voting Finished", map, RoundToFloor(float(item_info[0][VOTEINFO_ITEM_VOTES])/float(num_votes)*100), num_votes);
+		CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Nextmap Voting Finished", map, RoundToFloor(float(item_info[0][VOTEINFO_ITEM_VOTES])/float(num_votes)*100), num_votes);
 		LogAction(-1, -1, "Voting for next map has finished. Nextmap: %s.", map);
 	}	
 }
@@ -1487,7 +1487,7 @@ public Handler_MapVoteFinished(Handle:menu,
 				NativeVotes_DisplayFail(menu, NativeVotesFail_NotEnoughVotes);
 			}
 			
-			CPrintToChatAll("[MCE] %t", "Tie Vote", GetArraySize(mapList));
+			CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Tie Vote", GetArraySize(mapList));
 			SetupWarningTimer(WarningType_Revote, MapChange:g_ChangeTime, mapList);
 			return;
 		}
@@ -1524,7 +1524,7 @@ public Handler_MapVoteFinished(Handle:menu,
 				NativeVotes_DisplayFail(menu, NativeVotesFail_NotEnoughVotes);
 			}
 			
-			CPrintToChatAll("[MCE] %t", "Revote Is Needed", required_percent);
+			CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Revote Is Needed", required_percent);
 			SetupWarningTimer(WarningType_Revote, MapChange:g_ChangeTime, mapList);
 			return;
 		}
@@ -2316,7 +2316,7 @@ stock EngineVersion:GetEngineVersionCompat()
 	new EngineVersion:version;
 	if (GetFeatureStatus(FeatureType_Native, "GetEngineVersion") != FeatureStatus_Available)
 	{
-		new sdkVersion = GuessSDKVersion();
+		new sdkVersion = GetEngineVersion();
 		switch (sdkVersion)
 		{
 			case SOURCE_SDK_ORIGINAL:
