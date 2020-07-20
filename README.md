@@ -17,7 +17,7 @@ It requires a database table in a database with entries for all maps you want to
 ```
  CREATE TABLE IF NOT EXISTS `kz_maps` (`mapname` VARCHAR(50) NOT NULL PRIMARY KEY, `tier` TINYINT NOT NULL, `ljroom` TINYINT);
  ```
- You can use maplist.sql to create the table and import all global maps into your database. This may not always be up-to-date!
+  Use maplist.sql to create the table and import all global maps into your database. This may not always be up-to-date!
  
 * Fill it with all the maps you are tracking.
 * Ensure you have all the maps you want in `mapcycle.txt` on your server. 
