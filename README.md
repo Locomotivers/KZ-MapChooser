@@ -15,7 +15,7 @@ It requires a database table in a database with entries for all maps you want to
 * Ensure you have the "kztimer" or "gokz" databases configured in database.cfg
 * Create a table "kz_maps" in your database:
 ```
- CREATE TABLE IF NOT EXISTS `kz_maps` (mapname VARCHAR(50) NOT NULL PRIMARY KEY, `tier` INT(2) NOT NULL);
+ CREATE TABLE IF NOT EXISTS `kz_maps` (`mapname` VARCHAR(50) NOT NULL PRIMARY KEY, `tier` TINYINT NOT NULL, `ljroom` TINYINT);
  ```
  You can use maplist.sql to create the table and import all global maps into your database. This may not always be up-to-date!
  
