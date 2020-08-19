@@ -4,6 +4,9 @@ This is a modified version of MapChooserExtended intended for KZ Servers with su
 
 It requires a database table with entries for all maps you want to track, along with tier information and LJ Room availability.
 
+## Planned Features
+* Ability to lock RTV votes to players above a certain rank.
+
 ## Requirements
 
 * Sourcemod 1.10
@@ -24,3 +27,9 @@ It requires a database table with entries for all maps you want to track, along 
 * Ensure you have all the maps you want in `mapcycle.txt` on your server. 
 * If you are hosting several servers and would like to sync the ranks system between them (kztimer), list all maps you host across all servers in `mapcycle.txt` - and specify the tiers you want per server in nominations.cfg!
 * Open nominations.cfg and ensure you have specified what map tiers you are hosting. This will allow you to divide your servers in terms of difficulty.
+
+## Try Out The Plugin:
+
+```
+IP: gokz.gflclan.com:27015
+```
