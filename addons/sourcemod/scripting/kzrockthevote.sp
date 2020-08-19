@@ -37,17 +37,16 @@
 #include "include/mapchooser_extended"
 #include <nextmap>
 #include <colors>
+#include "include/kztimer"
 
 #pragma semicolon 1
-
-#define MCE_VERSION "1.10.0"
 
 public Plugin:myinfo =
 {
 	name = "KZ Rock The Vote",
 	author = "Powerlord,AlliedModders LLC & Infra",
 	description = "Provides RTV Map Voting for KZ Servers.",
-	version = "2.0.1",
+	version = "2.0.2",
 	url = "https://github.com/1zc/KZ-MapChooser"
 };
 
@@ -57,6 +56,7 @@ new Handle:g_Cvar_InitialDelay = INVALID_HANDLE;
 new Handle:g_Cvar_Interval = INVALID_HANDLE;
 new Handle:g_Cvar_ChangeTime = INVALID_HANDLE;
 new Handle:g_Cvar_RTVPostVoteAction = INVALID_HANDLE;
+new Handle:g_Cvar_SkillgroupRequirement = INVALID_HANDLE;
 
 new bool:g_CanRTV = false;		// True if RTV loaded maps and is active.
 new bool:g_RTVAllowed = false;	// True if RTV is available to players. Used to delay rtv votes.
@@ -66,6 +66,7 @@ new g_VotesNeeded = 0;			// Necessary votes before map vote begins. (voters * pe
 new bool:g_Voted[MAXPLAYERS+1] = {false, ...};
 
 new bool:g_InChange = false;
+new bool:g_bCanVote[MAXPLAYERS+1];
 
 public OnPluginStart()
 {
@@ -79,17 +80,12 @@ public OnPluginStart()
 	g_Cvar_Interval = CreateConVar("sm_rtv_interval", "240.0", "Time (in seconds) after a failed RTV before another can be held", 0, true, 0.00);
 	g_Cvar_ChangeTime = CreateConVar("sm_rtv_changetime", "0", "When to change the map after a succesful RTV: 0 - Instant, 1 - RoundEnd, 2 - MapEnd", _, true, 0.0, true, 2.0);
 	g_Cvar_RTVPostVoteAction = CreateConVar("sm_rtv_postvoteaction", "0", "What to do with RTV's after a mapvote has completed. 0 - Allow, success = instant change, 1 - Deny", _, true, 0.0, true, 1.0);
-	
+	g_Cvar_SkillgroupRequirement = CreateConVar("sm_rtv_skillgroup_requirement", "0", "Skillgroup required to use the rtv command, 0 = Unranked/Disabled.");
+
 	RegConsoleCmd("say", Command_Say);
 	RegConsoleCmd("say_team", Command_Say);
-	
 	RegConsoleCmd("sm_rtv", Command_RTV);
-	
 	RegAdminCmd("sm_forcertv", Command_ForceRTV, ADMFLAG_CHANGEMAP, "Force an RTV vote");
-	RegAdminCmd("mce_forcertv", Command_ForceRTV, ADMFLAG_CHANGEMAP, "Force an RTV vote");
-	
-	// Rock The Vote Extended cvars
-	CreateConVar("rtve_version", MCE_VERSION, "Rock The Vote Extended Version", FCVAR_SPONLY|FCVAR_NOTIFY|FCVAR_DONTRECORD);
 	
 	AutoExecConfig(true, "KZ_RTV");
 }
@@ -126,30 +122,37 @@ public OnConfigsExecuted()
 
 public OnClientConnected(client)
 {
-	if(IsFakeClient(client))
-		return;
-	
-	g_Voted[client] = false;
+	if(!IsFakeClient(client))
+	{
+		g_Voted[client] = false;
+		g_bCanVote[client] = false;
 
-	g_Voters++;
-	g_VotesNeeded = RoundToFloor(float(g_Voters) * GetConVarFloat(g_Cvar_Needed));
-	
-	return;
+		if (GetConVarInt(g_Cvar_SkillgroupRequirement) > 0)
+		{
+			kz_checkPlayerSkillgroup(client);
+			return;
+		}
+
+		g_bCanVote[client] = true;
+		g_Voters++;
+		g_VotesNeeded = RoundToFloor(float(g_Voters) * GetConVarFloat(g_Cvar_Needed));
+		return;
+	}
 }
 
 public OnClientDisconnect(client)
 {
-	if(IsFakeClient(client))
-		return;
 	
 	if(g_Voted[client])
 	{
 		g_Votes--;
 	}
 	
-	g_Voters--;
-	
-	g_VotesNeeded = RoundToFloor(float(g_Voters) * GetConVarFloat(g_Cvar_Needed));
+	if (!IsFakeClient(client) && g_bCanVote[client])
+	{
+		g_Voters--;
+		g_VotesNeeded = RoundToFloor(float(g_Voters) * GetConVarFloat(g_Cvar_Needed));
+	}
 	
 	if (!g_CanRTV)
 	{
@@ -238,7 +241,16 @@ AttemptRTV(client)
 	{
 		CReplyToCommand(client, "[\x0CKZ-MC\x01] %t", "Already Voted", g_Votes, g_VotesNeeded);
 		return;
-	}	
+	}
+
+	if (GetConVarInt(g_Cvar_SkillgroupRequirement) > 0)
+	{
+		if (KZTimer_GetSkillGroup(client) < GetConVarInt(g_Cvar_SkillgroupRequirement))
+		{
+			PrintToChat(client, "[SM] %t", "Rank Requirement", "\x02", GetConVarInt(g_Cvar_SkillgroupRequirement));
+			return;
+		}
+	}
 	
 	new String:name[MAX_NAME_LENGTH];
 	GetClientName(client, name, sizeof(name));
@@ -272,7 +284,7 @@ StartRTV()
 		new String:map[PLATFORM_MAX_PATH];
 		if (GetNextMap(map, sizeof(map)))
 		{
-			CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Changing Maps", map);
+			CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Changing Maps", "\x02", map);
 			CreateTimer(5.0, Timer_ChangeMap, _, TIMER_FLAG_NO_MAPCHANGE);
 			g_InChange = true;
 			
@@ -336,4 +348,30 @@ public Action:Command_ForceRTV(client, args)
 	return Plugin_Handled;
 }
 
+public void kz_checkPlayerSkillgroup(int client)
+{
+	if (IsFakeClient(client))
+	{
+		return;
+	}
 
+	int playerSkillgroup;
+	playerSkillgroup = KZTimer_GetSkillGroup(client);
+	bool bNewVoter = true;
+
+	if (GetConVarInt(g_Cvar_SkillgroupRequirement) > 0)
+	{
+		if (playerSkillgroup < GetConVarInt(g_Cvar_SkillgroupRequirement))
+		{
+			bNewVoter = false;
+			g_bCanVote[client] = false;
+		}
+	}
+
+	if (bNewVoter)
+	{
+		g_bCanVote[client] = true;
+		g_Voters++;
+		g_VotesNeeded = RoundToFloor(float(g_Voters) * GetConVarFloat(g_Cvar_Needed));
+	}
+}
