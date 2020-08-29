@@ -12,7 +12,7 @@ It requires a database table with entries for all maps you want to track, along 
 
 ## Installation
 
-* Upload all the files to your csgo server directory
+* Grab the latest [release](https://github.com/1zc/KZ-MapChooser/releases/latest) and extract it to your csgo server directory.
 * Create a database entry in `databases.cfg` called `kzMaps`. You may copy the same config you use for the `kztimer` or `gokz` database configurations for convenience sake. 
 * Create a table "kz_maps" in your selected database. This depends on what you set in the previous step (whether you set kzMaps to your KZTimer/GOKZ databases or if you're using something else)
 ```
