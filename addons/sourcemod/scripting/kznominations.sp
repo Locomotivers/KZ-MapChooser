@@ -45,7 +45,7 @@ public Plugin:myinfo =
 	name = "KZ Map Nominations",
 	author = "Powerlord, AlliedModders LLC & Infra",
 	description = "Provides Map Nominations for KZ Servers.",
-	version = "2.0.1",
+	version = "2.0.2",
 	url = "https://github.com/1zc/KZ-MapChooser"
 };
 
@@ -257,22 +257,27 @@ public Action:Command_Nominate(client, args)
 	}
 	
 	decl String:mapname[PLATFORM_MAX_PATH];
+	char resolvedMap[PLATFORM_MAX_PATH];
+	char displayName[PLATFORM_MAX_PATH];
 	GetCmdArg(1, mapname, sizeof(mapname));
 
-	//if (FindMap(mapname, mapname, sizeof(mapname)) == FindMap_NotFound)
-	//{
+	if (FindMap(mapname, resolvedMap, sizeof(resolvedMap)) == FindMap_NotFound)
+	{
 		// We couldn't resolve the map entry to a filename, so...
-		//ReplyToCommand(client, "%t", "Map was not found", mapname);
-		//return Plugin_Handled;		
-	//}
-	
-	char displayName[PLATFORM_MAX_PATH];
-	GetMapDisplayName(mapname, displayName, sizeof(displayName));
+		ReplyToCommand(client, "%t", "Map was not found", mapname);
+		return Plugin_Handled;		
+	}
+
+	else 
+	{
+		FindMap(mapname, resolvedMap, sizeof(resolvedMap));
+		GetMapDisplayName(resolvedMap, displayName, sizeof(displayName));
+	}
 
 	new status;
-	if (!GetTrieValue(g_mapTrie, mapname, status))
+	if (!GetTrieValue(g_mapTrie, displayName, status))
 	{
-		CReplyToCommand(client, "%t", "Map was not found", mapname);
+		CReplyToCommand(client, "%t", "Map was not found", displayName);
 		return Plugin_Handled;		
 	}
 	
@@ -295,8 +300,9 @@ public Action:Command_Nominate(client, args)
 		
 		return Plugin_Handled;
 	}
-	RemoveMapPath(mapname, mapname, sizeof(mapname));
-	new NominateResult:result = NominateMap(mapname, false, client);
+
+	RemoveMapPath(resolvedMap, resolvedMap, sizeof(resolvedMap));
+	new NominateResult:result = NominateMap(displayName, false, client);
 	
 	if (result > Nominate_Replaced)
 	{
