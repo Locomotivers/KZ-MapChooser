@@ -37,6 +37,24 @@ Let's say you host several KZ Climb servers, separated by difficulty tiers - A T
 
 All you need to then do is specify the local server's map tiers using the sm_server_tier CVar to host only those maps, while syncing skillgroups across all your servers!
 
+## Maintenance
+
+A drawback of this plugin is that you will have to manually update/insert entries any time a new map is released. That is, with every global release, you will need to insert entries for the newly released maps with their tier and LJ room info. I might develop a way to have the LJ room info be automatically collected, however I have no ETA on that. 
+
+You can insert maps into the kz_maps table with:
+```
+INSERT INTO `kz_maps` (`mapname`, `tier`, `ljroom`) VALUES
+('kz_MAPNAME',1,0),
+('kz_MAPNAME',1,1);
+```
+
+Where, 
+```
+mapname = Name of the map file (eg: kz_sexmachine64)
+tier = Tier number (1,2,3,4,5,6,7)
+ljroom = LJRoom availability (1 = true, 0 = false)
+```
+
 ## Try Out The Plugin:
 
 ```
