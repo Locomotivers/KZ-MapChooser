@@ -325,7 +325,7 @@ public Action:Command_Nominate(client, args)
 	decl String:name[MAX_NAME_LENGTH];
 	GetClientName(client, name, sizeof(name));
 	PrintToChatAll("[\x0CKZ-MC\x01] %t", "Map Nominated", name, displayName);
-	LogMessage("%s nominated %s", name, mapname);
+	LogMessage("%s nominated %s", name, displayName);
 
 	return Plugin_Continue;
 }
