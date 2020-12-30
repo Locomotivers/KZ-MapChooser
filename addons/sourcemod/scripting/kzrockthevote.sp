@@ -37,7 +37,10 @@
 #include "include/mapchooser_extended"
 #include <nextmap>
 #include <colors>
+
+#undef REQUIRE_PLUGIN
 #include "include/kztimer"
+new bool:g_KZT = false;
 
 #pragma semicolon 1
 
@@ -90,6 +93,11 @@ public OnPluginStart()
 	AutoExecConfig(true, "KZ_RTV");
 }
 
+public OnAllPluginsLoaded()
+{
+	g_KZT = LibraryExists("KZTimer");
+}
+
 public OnMapStart()
 {
 	g_Voters = 0;
@@ -127,7 +135,7 @@ public OnClientConnected(client)
 		g_Voted[client] = false;
 		g_bCanVote[client] = false;
 
-		if (GetConVarInt(g_Cvar_SkillgroupRequirement) > 0)
+		if (GetConVarInt(g_Cvar_SkillgroupRequirement) > 0 && g_KZT == true)
 		{
 			kz_checkPlayerSkillgroup(client);
 			return;
@@ -243,7 +251,7 @@ AttemptRTV(client)
 		return;
 	}
 
-	if (GetConVarInt(g_Cvar_SkillgroupRequirement) > 0)
+	if (GetConVarInt(g_Cvar_SkillgroupRequirement) > 0 && g_KZT == true)
 	{
 		if (KZTimer_GetSkillGroup(client) < GetConVarInt(g_Cvar_SkillgroupRequirement))
 		{
