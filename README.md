@@ -39,7 +39,9 @@ All you need to then do is specify the local server's map tiers using the sm_ser
 
 ## Maintenance
 
-A drawback of this plugin is that you will have to manually update/insert entries any time a new map is released. That is, with every global release, you will need to insert entries for the newly released maps with their tier and LJ room info. I might develop a way to have the LJ room info be automatically collected, however I have no ETA on that. 
+***I do update the maplist.sql file when new maps are released, but I cannot guarantee it'll be updated very quickly! You can re-import newer maplist.sql files to update the map-pool on the database. In the case I haven't updated maplist.sql, you can update it yourself - see below.***
+
+A drawback of this plugin is that you may have to manually update/insert entries any time a new map is released. That is, with every global release, you will need to insert entries for the newly released maps with their tier and LJ room info. I might develop a way to have the LJ room info be automatically collected, however I have no ETA on that. 
 
 You can insert maps into the kz_maps table with:
 ```
