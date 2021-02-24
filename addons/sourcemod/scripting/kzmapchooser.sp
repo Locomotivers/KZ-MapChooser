@@ -44,6 +44,8 @@
 #endif
 
 #pragma semicolon 1
+#pragma newdecls required
+
 #include <sourcemod>
 #include <mapchooser>
 #include "include/mapchooser_extended"
@@ -86,7 +88,7 @@ public Plugin myinfo =
 	name = "KZ MapChooser",
 	author = "Powerlord, Zuko, AlliedModders LLC & Infra",
 	description = "Automated Map Voting for KZ Servers.",
-	version = "2.1.0",
+	version = "2.1.1",
 	url = "https://github.com/1zc/KZ-MapChooser"
 };
 

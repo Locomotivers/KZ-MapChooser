@@ -24,17 +24,18 @@ enum Jumpcolor{
 }
 
 /* Natives */
-native bool:KZTimer_GetTimerStatus(client); // returns (bool) timer status
-native KZTimer_StopTimer(client); // stops the timer
-native KZTimer_StopUpdatingOfClimbersMenu(client); // stops refreshing of the timer panel/menu
-native KZTimer_EmulateStartButtonPress(client); // start button alternative
-native KZTimer_EmulateStopButtonPress(client); // stop button alternative
-native Float:KZTimer_GetCurrentTime(client); //returns (float) current run time
-native Float:KZTimer_GetAvgTimeTp(); //avg tp time - returns (float) 0.0 if less than 5 map times (kztimer calculates the avg time on mapstart and if someone set a new time) 
-native Float:KZTimer_GetAvgTimePro(); //avg pro time - returns (float) 0.0 if less than 5 map times (kztimer calculates the avg time on mapstart and if someone set a new time)
-native KZTimer_GetSkillGroup(client); // skill group - returns (int) 0=NORANK, 1=NEWB,2=SCRUB,..,9=PRO 
-native KZTimer_GetVersion();
+native bool KZTimer_GetTimerStatus(int client); // returns (bool) timer status
+native int KZTimer_StopTimer(int client); // stops the timer
+native void KZTimer_StopUpdatingOfClimbersMenu(int client); // stops refreshing of the timer panel/menu
+native void KZTimer_EmulateStartButtonPress(int client); // start button alternative
+native void KZTimer_EmulateStopButtonPress(int client); // stop button alternative
+native float KZTimer_GetCurrentTime(int client); //returns (float) current run time
+native float KZTimer_GetAvgTimeTp(); //avg tp time - returns (float) 0.0 if less than 5 map times (kztimer calculates the avg time on mapstart and if someone set a new time) 
+native float KZTimer_GetAvgTimePro(); //avg pro time - returns (float) 0.0 if less than 5 map times (kztimer calculates the avg time on mapstart and if someone set a new time)
+native int KZTimer_GetSkillGroup(int client); // skill group - returns (int) 0=NORANK, 1=NEWB,2=SCRUB,..,9=PRO 
+native void KZTimer_GetVersion();
 native void KZTimer_GetVersion_Desc(char[] buffer, int size);
+
 //KZTimer_GetSkillGroup can be helpful to set up a high ranked only server. This server has to share the database with your 'main' kztimer server
 
 /**
@@ -44,7 +45,7 @@ native void KZTimer_GetVersion_Desc(char[] buffer, int size);
  *
  * @noreturn
  */
-forward KZTimer_TimerStarted(client);
+forward void KZTimer_TimerStarted(int client);
 
 /**
  * Called when the timer is stopped.
@@ -56,7 +57,7 @@ forward KZTimer_TimerStarted(client);
  *
  * @noreturn
  */
-forward KZTimer_TimerStopped(client, teleports, Float:time, record);
+forward void KZTimer_TimerStopped(int client, int teleports, float time, bool record);
 
 /**
  * Called when the timer is stopped.
@@ -70,7 +71,7 @@ forward KZTimer_TimerStopped(client, teleports, Float:time, record);
  *
  * @noreturn
  */
-forward KZTimer_TimerStoppedValid(client, teleports, rank, Float:time);
+forward void KZTimer_TimerStoppedValid(int client, int teleports, int rank, float time);
 
 /**
  * Called when a jump with potential jumpstats starts
@@ -84,7 +85,7 @@ forward KZTimer_TimerStoppedValid(client, teleports, rank, Float:time);
  *
  * @noreturn
  */
-forward KZTimer_OnJumpstatStarted(client);
+forward void KZTimer_OnJumpstatStarted(int client);
 
 /**
  * Called when a jumpstat is completed.
@@ -97,7 +98,7 @@ forward KZTimer_OnJumpstatStarted(client);
  *
  * @noreturn
  */
-forward KZTimer_OnJumpstatCompleted(client, jumptype, jumpcolor, float distance, bool personalbest);
+forward void KZTimer_OnJumpstatCompleted(int client, Jumptype jumptype, Jumpcolor jumpcolor, float distance, bool personalbest);
 
 /**
  * Called when a jump is invalidated
@@ -111,10 +112,10 @@ forward KZTimer_OnJumpstatCompleted(client, jumptype, jumpcolor, float distance,
  *
  * @noreturn
  */
-forward KZTimer_OnJumpstatInvalid(client);
+forward void KZTimer_OnJumpstatInvalid(int client);
 
 
-public SharedPlugin:__pl_KZTimer =
+public SharedPlugin __pl_KZTimer =
 {
 	name = "KZTimer",
 	file = "KZTimer.smx",
@@ -125,7 +126,7 @@ public SharedPlugin:__pl_KZTimer =
 	#endif
 };
 
-public __pl_KZTimer_SetNTVOptional()
+public void __pl_KZTimer_SetNTVOptional()
 {
 	MarkNativeAsOptional("KZTimer_GetTimerStatus");
 	MarkNativeAsOptional("KZTimer_StopTimer");

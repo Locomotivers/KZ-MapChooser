@@ -32,6 +32,9 @@
  * Version: $Id$
  */
 
+#pragma newdecls required
+#pragma semicolon 1
+
 #include <sourcemod>
 #include <mapchooser>
 #include "include/mapchooser_extended"
@@ -40,11 +43,9 @@
 
 #undef REQUIRE_PLUGIN
 #include "include/kztimer"
-new bool:g_KZT = false;
+bool g_KZT = false;
 
-#pragma semicolon 1
-
-public Plugin:myinfo =
+public Plugin myinfo =
 {
 	name = "KZ Rock The Vote",
 	author = "Powerlord,AlliedModders LLC & Infra",
@@ -53,25 +54,25 @@ public Plugin:myinfo =
 	url = "https://github.com/1zc/KZ-MapChooser"
 };
 
-new Handle:g_Cvar_Needed = INVALID_HANDLE;
-new Handle:g_Cvar_MinPlayers = INVALID_HANDLE;
-new Handle:g_Cvar_InitialDelay = INVALID_HANDLE;
-new Handle:g_Cvar_Interval = INVALID_HANDLE;
-new Handle:g_Cvar_ChangeTime = INVALID_HANDLE;
-new Handle:g_Cvar_RTVPostVoteAction = INVALID_HANDLE;
-new Handle:g_Cvar_SkillgroupRequirement = INVALID_HANDLE;
+ConVar g_Cvar_Needed;
+ConVar g_Cvar_MinPlayers;
+ConVar g_Cvar_InitialDelay;
+ConVar g_Cvar_Interval;
+ConVar g_Cvar_ChangeTime;
+ConVar g_Cvar_RTVPostVoteAction;
+ConVar g_Cvar_SkillgroupRequirement;
 
-new bool:g_CanRTV = false;		// True if RTV loaded maps and is active.
-new bool:g_RTVAllowed = false;	// True if RTV is available to players. Used to delay rtv votes.
-new g_Voters = 0;				// Total voters connected. Doesn't include fake clients.
-new g_Votes = 0;				// Total number of "say rtv" votes
-new g_VotesNeeded = 0;			// Necessary votes before map vote begins. (voters * percent_needed)
-new bool:g_Voted[MAXPLAYERS+1] = {false, ...};
+bool g_CanRTV = false;		// True if RTV loaded maps and is active.
+bool g_RTVAllowed = false;	// True if RTV is available to players. Used to delay rtv votes.
+bool g_Voted[MAXPLAYERS+1] = {false, ...};
+bool g_InChange = false;
+bool g_bCanVote[MAXPLAYERS+1];
 
-new bool:g_InChange = false;
-new bool:g_bCanVote[MAXPLAYERS+1];
+int g_Voters = 0;				// Total voters connected. Doesn't include fake clients.
+int g_Votes = 0;				// Total number of "say rtv" votes
+int g_VotesNeeded = 0;			// Necessary votes before map vote begins. (voters * percent_needed)
 
-public OnPluginStart()
+public void OnPluginStart()
 {
 	LoadTranslations("common.phrases");
 	LoadTranslations("rockthevote.phrases");
@@ -93,12 +94,12 @@ public OnPluginStart()
 	AutoExecConfig(true, "KZ_RTV");
 }
 
-public OnAllPluginsLoaded()
+public void OnAllPluginsLoaded()
 {
 	g_KZT = LibraryExists("KZTimer");
 }
 
-public OnMapStart()
+public void OnMapStart()
 {
 	g_Voters = 0;
 	g_Votes = 0;
@@ -106,7 +107,7 @@ public OnMapStart()
 	g_InChange = false;
 	
 	/* Handle late load */
-	for (new i=1; i<=MaxClients; i++)
+	for (int i=1; i<=MaxClients; i++)
 	{
 		if (IsClientConnected(i))
 		{
@@ -115,20 +116,20 @@ public OnMapStart()
 	}
 }
 
-public OnMapEnd()
+public void OnMapEnd()
 {
 	g_CanRTV = false;	
 	g_RTVAllowed = false;
 }
 
-public OnConfigsExecuted()
+public void OnConfigsExecuted()
 {	
 	g_CanRTV = true;
 	g_RTVAllowed = false;
 	CreateTimer(GetConVarFloat(g_Cvar_InitialDelay), Timer_DelayRTV, _, TIMER_FLAG_NO_MAPCHANGE);
 }
 
-public OnClientConnected(client)
+public void OnClientConnected(int client)
 {
 	if(!IsFakeClient(client))
 	{
@@ -148,7 +149,7 @@ public OnClientConnected(client)
 	}
 }
 
-public OnClientDisconnect(client)
+public void OnClientDisconnect(int client)
 {
 	
 	if(g_Voted[client])
@@ -181,7 +182,7 @@ public OnClientDisconnect(client)
 	}	
 }
 
-public Action:Command_RTV(client, args)
+public Action Command_RTV(int client, int args)
 {
 	if (!g_CanRTV || !client)
 	{
@@ -193,27 +194,27 @@ public Action:Command_RTV(client, args)
 	return Plugin_Handled;
 }
 
-public Action:Command_Say(client, args)
+public Action Command_Say(int client, int args)
 {
 	if (!g_CanRTV || !client)
 	{
 		return Plugin_Continue;
 	}
 	
-	decl String:text[192];
+	char text[192];
 	if (!GetCmdArgString(text, sizeof(text)))
 	{
 		return Plugin_Continue;
 	}
 	
-	new startidx = 0;
+	int startidx = 0;
 	if(text[strlen(text)-1] == '"')
 	{
 		text[strlen(text)-1] = '\0';
 		startidx = 1;
 	}
 	
-	new ReplySource:old = SetCmdReplySource(SM_REPLY_TO_CHAT);
+	ReplySource old = SetCmdReplySource(SM_REPLY_TO_CHAT);
 	
 	if (strcmp(text[startidx], "rtv", false) == 0 || strcmp(text[startidx], "rockthevote", false) == 0)
 	{
@@ -225,7 +226,7 @@ public Action:Command_Say(client, args)
 	return Plugin_Continue;	
 }
 
-AttemptRTV(client)
+void AttemptRTV(int client)
 {
 	if (!g_RTVAllowed  || (GetConVarInt(g_Cvar_RTVPostVoteAction) == 1 && HasEndOfMapVoteFinished()))
 	{
@@ -260,7 +261,7 @@ AttemptRTV(client)
 		}
 	}
 	
-	new String:name[MAX_NAME_LENGTH];
+	char name[MAX_NAME_LENGTH];
 	GetClientName(client, name, sizeof(name));
 	
 	g_Votes++;
@@ -274,12 +275,12 @@ AttemptRTV(client)
 	}	
 }
 
-public Action:Timer_DelayRTV(Handle:timer)
+public Action Timer_DelayRTV(Handle timer)
 {
 	g_RTVAllowed = true;
 }
 
-StartRTV()
+void StartRTV()
 {
 	if (g_InChange)
 	{
@@ -289,7 +290,7 @@ StartRTV()
 	if (EndOfMapVoteEnabled() && HasEndOfMapVoteFinished())
 	{
 		/* Change right now then */
-		new String:map[PLATFORM_MAX_PATH];
+		char map[PLATFORM_MAX_PATH];
 		if (GetNextMap(map, sizeof(map)))
 		{
 			CPrintToChatAll("[\x0CKZ-MC\x01] %t", "Changing Maps", "\x02", map);
@@ -305,33 +306,33 @@ StartRTV()
 	
 	if (CanMapChooserStartVote())
 	{
-		new MapChange:when = MapChange:GetConVarInt(g_Cvar_ChangeTime);
+		MapChange when = view_as<MapChange>(g_Cvar_ChangeTime.IntValue);
 		InitiateMapChooserVote(when);
 		
 		ResetRTV();
 		
 		g_RTVAllowed = false;
-		CreateTimer(GetConVarFloat(g_Cvar_Interval), Timer_DelayRTV, _, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(g_Cvar_Interval.FloatValue, Timer_DelayRTV, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 
-ResetRTV()
+void ResetRTV()
 {
 	g_Votes = 0;
 			
-	for (new i=1; i<=MAXPLAYERS; i++)
+	for (int i=1; i<=MAXPLAYERS; i++)
 	{
 		g_Voted[i] = false;
 	}
 }
 
-public Action:Timer_ChangeMap(Handle:hTimer)
+public Action Timer_ChangeMap(Handle hTimer)
 {
 	g_InChange = false;
 	
 	LogMessage("RTV changing map manually");
 	
-	new String:map[PLATFORM_MAX_PATH];
+	char map[PLATFORM_MAX_PATH];
 	if (GetNextMap(map, sizeof(map)))
 	{	
 		ForceChangeLevel(map, "RTV after mapvote");
@@ -342,7 +343,7 @@ public Action:Timer_ChangeMap(Handle:hTimer)
 
 // Rock The Vote Extended functions
 
-public Action:Command_ForceRTV(client, args)
+public Action Command_ForceRTV(int client, int args)
 {
 	if (!g_CanRTV || !client)
 	{
